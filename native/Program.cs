@@ -1,18 +1,19 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
+using System.Text;
 
 using var stdin = Console.OpenStandardInput();
 using var logFile = File.OpenWrite(@"C:\Users\Anton\Desktop\ext\log.txt");
-while (true)
+using var logger = new StreamWriter(logFile, Encoding.UTF8, leaveOpen: true);
+using var stdout = Console.OpenStandardOutput();
+while (!AppDomain.CurrentDomain.IsFinalizingForUnload())
 {
     Loop();
 }
 
 void Loop()
 {
-    Debugger.Launch();
     var message = ReadHelper.Read(stdin);
-    using var fileStream = File.OpenRead(message.FilePath);
 
     // To support other formats:
     // https://github.com/icsharpcode/SharpZipLib/wiki/GZip-and-Tar-Samples
@@ -39,11 +40,14 @@ void Loop()
 
     try
     {
-        ZipFile.ExtractToDirectory(message.FilePath, filePathWithoutExtension);
+        {
+            using var fileStream = File.OpenRead(message.FilePath);
+            ZipFile.ExtractToDirectory(message.FilePath, filePathWithoutExtension);
+        }
+        File.Delete(message.FilePath);
     }
     catch (Exception e)
     {
-        WriteHelper.WriteError(logFile, e);
-        logFile.Write([(byte) '\n']);
+        logger.WriteLine(e.Message);
     }
 }

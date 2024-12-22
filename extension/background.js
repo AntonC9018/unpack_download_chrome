@@ -10,8 +10,29 @@ function rerun()
         // row.textContent = message;
         // div.append(row);
         console.log(message);
-        rerun();
     })
 
-    port.postMessage({filePath: "C:\\Users\\Anton\\Downloads\\folder\\ghoul.zip"});
+    chrome.downloads.onChanged.addListener(download =>
+    {
+        if (!download.state)
+        {
+            return;
+        }
+        if (download.state.current !== "complete")
+        {
+            return;
+        }
+        chrome.downloads.search({
+            id: download.id,
+        }).then(x =>{
+            if (x.length === 0)
+            {
+                return;
+            }
+
+            port.postMessage({
+                filePath: x[0].filename,
+            });
+        });
+    });
 }

@@ -6,16 +6,20 @@ public sealed class Message
     public required string FilePath { get; set; }
 }
 
-public static class ReadHelper
+public static class SerializationHelper
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    public const int LengthSize = 4;
+    public static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
+}
 
+public static class ReadHelper
+{
     public static Message Read(Stream input)
     {
-        Span<byte> lenBytes = stackalloc byte[WriteBuffer.LengthSize];
+        Span<byte> lenBytes = stackalloc byte[SerializationHelper.LengthSize];
         input.ReadExactly(lenBytes);
         var len = BitConverter.ToInt32(lenBytes);
 
@@ -32,7 +36,7 @@ public static class ReadHelper
             throw new InvalidOperationException("Invalid input stream.");
         }
 
-        var message = JsonSerializer.Deserialize<Message>(bufferSpan, JsonOptions);
+        var message = JsonSerializer.Deserialize<Message>(bufferSpan, SerializationHelper.JsonOptions);
         if (message is null)
         {
             throw new InvalidOperationException("Huh? Passing null?");
