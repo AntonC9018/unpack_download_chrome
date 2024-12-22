@@ -6,5 +6,12 @@
   "action": {
     "default_popup": "hello.html",
     "default_icon": "hello_extensions.png"
+  },
+  "permissions": [
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
   }
 }

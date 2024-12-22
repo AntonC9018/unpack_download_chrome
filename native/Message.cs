@@ -8,6 +8,11 @@ public sealed class Message
 
 public static class ReadHelper
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
     public static Message Read(Stream input)
     {
         Span<byte> lenBytes = stackalloc byte[WriteBuffer.LengthSize];
@@ -27,7 +32,7 @@ public static class ReadHelper
             throw new InvalidOperationException("Invalid input stream.");
         }
 
-        var message = JsonSerializer.Deserialize<Message>(bufferSpan);
+        var message = JsonSerializer.Deserialize<Message>(bufferSpan, JsonOptions);
         if (message is null)
         {
             throw new InvalidOperationException("Huh? Passing null?");
