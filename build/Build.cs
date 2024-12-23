@@ -106,7 +106,7 @@ class Build : NukeBuild
 
             var msiFileName = AppConstants.AppName + ".msi";
             var msiFilePath = TempPluginDirectory / msiFileName;
-            msiFilePath.CopyToDirectory(TempDirectory, policy: ExistsPolicy.FileOverwrite);
+            msiFilePath.CopyToDirectory(OutputDirectory, policy: ExistsPolicy.FileOverwrite);
         });
 
 }
