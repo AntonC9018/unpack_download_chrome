@@ -23,8 +23,87 @@ public sealed class ArchiveExecutablesContext
     }
 }
 
+public enum ExtractStatus
+{
+    Failure,
+    Success,
+    NotArchive,
+    DirectoryExists,
+}
+
 public static class ArchiveUtils
 {
+    public struct ExtractToDirectoryWithSameNameParams
+    {
+        public required string FilePath;
+        public required ArchiveExecutablesContext Context;
+    }
+    public static ExtractStatus ExtractToDirectoryWithSameName(ExtractToDirectoryWithSameNameParams p)
+    {
+        ArchiveType? GetArchiveType()
+        {
+            if (p.FilePath.EndsWith(".zip"))
+            {
+                return ArchiveType.Zip;
+            }
+            if (p.FilePath.EndsWith(".rar"))
+            {
+                return ArchiveType.Rar;
+            }
+            if (p.FilePath.EndsWith(".7z"))
+            {
+                return ArchiveType._7z;
+            }
+            if (p.FilePath.EndsWith(".tar.gz"))
+            {
+                return ArchiveType.TarGz;
+            }
+            if (p.FilePath.EndsWith(".tar"))
+            {
+                return ArchiveType.Tar;
+            }
+            return null;
+        }
+
+        if (GetArchiveType() is not { } archiveType)
+        {
+            return ExtractStatus.NotArchive;
+        }
+
+        string FilePathWithoutExtension()
+        {
+            var filePathSpan = p.FilePath.AsSpan();
+            var lastDirSeparatorPath = filePathSpan.LastIndexOfAny(['\\', '/']);
+            int lastPartStart = lastDirSeparatorPath + 1;
+            var lastPart = filePathSpan[lastPartStart ..];
+            var dotIndex = lastPart.IndexOf(".");
+
+            // Checked the extension previously.
+            Debug.Assert(dotIndex != -1);
+
+            return p.FilePath[.. (lastPartStart + dotIndex)];
+        }
+
+        var filePathWithoutExtension = FilePathWithoutExtension();
+        if (Directory.Exists(filePathWithoutExtension))
+        {
+            return ExtractStatus.DirectoryExists;
+        }
+
+        bool success = ExtractArchive(new()
+        {
+            Context = p.Context,
+            Type = archiveType,
+            InputFilePath = p.FilePath,
+            OutputDirectoryPath = filePathWithoutExtension,
+        });
+        if (success)
+        {
+            return ExtractStatus.Success;
+        }
+        return ExtractStatus.Failure;
+    }
+
     public struct ExtractParams
     {
         public required ArchiveExecutablesContext Context;
@@ -111,11 +190,19 @@ public static class ArchiveUtils
         public required string ExecutablePath;
     }
 
-    private static bool ExecuteWithArgs(string program, string[] args)
+    private static bool ExecuteWithArgs(
+        string program,
+        string outputPath,
+        string[] args)
     {
         var startInfo = new ProcessStartInfo(
             program,
             arguments: args);
+        startInfo.WorkingDirectory = outputPath;
+
+        // The output is going to be ignored
+        startInfo.RedirectStandardOutput = true;
+
         var process = Process.Start(startInfo);
         if (process is null)
         {
@@ -132,22 +219,25 @@ public static class ArchiveUtils
     public static bool ExtractRar(ExtractWithExecutableParams p)
     {
         return ExecuteWithArgs(
-            p.ExecutablePath,
+            program: p.ExecutablePath,
+            outputPath: p.OutputDirectoryPath,
             [
                 "x",
                 p.InputFilePath,
-                p.OutputDirectoryPath,
+                // No output
+                "-inul",
             ]);
     }
 
     public static bool Extract7Z(ExtractWithExecutableParams p)
     {
         return ExecuteWithArgs(
-            p.ExecutablePath,
+            program: p.ExecutablePath,
+            outputPath: p.OutputDirectoryPath,
             [
                 "x",
                 p.InputFilePath,
-                $"-o\"{p.OutputDirectoryPath}\"",
+                // There's no flag for no output
             ]);
     }
 

@@ -19,21 +19,21 @@ ref struct WriteBuffer
     public Span<byte> LengthBuffer => WholeBuffer[.. SerializationHelper.LengthSize];
     public Span<byte> CurrentBuffer => WholeBuffer[Offset ..];
 
-    public void Write(char ch)
+    public void Append(char ch)
     {
         Debug.Assert(Offset >= MaxBufferSize);
         CurrentBuffer[0] = (byte) ch;
         Offset++;
     }
 
-    public void WriteString(string str, int reserveCount)
+    public void AppendString(string str, int reserveCount)
     {
         var b = CurrentBuffer[.. ^reserveCount];
         int written = Encoding.UTF8.GetBytes(str.AsSpan(), b);
         Offset += written;
     }
 
-    public void WriteBytes(ReadOnlySpan<byte> bytes)
+    public void AppendBytes(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length > CurrentBuffer.Length)
         {
@@ -44,7 +44,7 @@ ref struct WriteBuffer
         Offset += bytes.Length;
     }
 
-    public void WriteLength()
+    public void SetLength()
     {
         var b = LengthBuffer;
         var len = Offset - SerializationHelper.LengthSize;
@@ -62,8 +62,8 @@ public static class WriteHelper
         var bytes = JsonSerializer.SerializeToUtf8Bytes(obj, SerializationHelper.JsonOptions);
         Span<byte> buffer = stackalloc byte[WriteBuffer.MaxBufferSize];
         WriteBuffer w = new(buffer);
-        w.WriteBytes(bytes);
-        w.WriteLength();
+        w.AppendBytes(bytes);
+        w.SetLength();
         writer.Write(w.WrittenBuffer);
     }
 
@@ -73,18 +73,13 @@ public static class WriteHelper
         Span<byte> buffer = stackalloc byte[WriteBuffer.MaxBufferSize];
         WriteBuffer w = new(buffer);
 
-        w.Write('"');
-        w.WriteString(message, reserveCount: 1);
-        w.Write('"');
-        w.WriteLength();
+        w.Append('"');
+        w.AppendString(message, reserveCount: 1);
+        w.Append('"');
+        w.SetLength();
 
         writer.Write(w.WrittenBuffer);
     }
-}
-
-public sealed class DeleteCommand
-{
-    public required string DeleteFilePath { get; set; }
 }
 
 public sealed class StatusResponse

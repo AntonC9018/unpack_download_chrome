@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net9.0-windows</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\native\native.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="data\" />
+        <None CopyToOutputDirectory="PreserveNewest" Include="data\*" />
+    </ItemGroup>
+</Project>

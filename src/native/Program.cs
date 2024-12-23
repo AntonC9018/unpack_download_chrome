@@ -32,66 +32,17 @@ void Loop()
         return;
     }
 
-    ArchiveType? GetArchiveType()
-    {
-        if (filePath.EndsWith(".zip"))
-        {
-            return ArchiveType.Zip;
-        }
-        if (filePath.EndsWith(".rar"))
-        {
-            return ArchiveType.Rar;
-        }
-        if (filePath.EndsWith(".7z"))
-        {
-            return ArchiveType._7z;
-        }
-        if (filePath.EndsWith(".tar.gz"))
-        {
-            return ArchiveType.TarGz;
-        }
-        if (filePath.EndsWith(".tar"))
-        {
-            return ArchiveType.Tar;
-        }
-        return null;
-    }
-
-    if (GetArchiveType() is not { } archiveType)
-    {
-        return;
-    }
-
-    string FilePathWithoutExtension()
-    {
-        var filePathSpan = filePath.AsSpan();
-        var lastDirSeparatorPath = filePathSpan.LastIndexOfAny(['\\', '/']);
-        int lastPartStart = lastDirSeparatorPath + 1;
-        var lastPart = filePathSpan[lastPartStart ..];
-        var dotIndex = lastPart.IndexOf(".");
-
-        // Checked the extension previously.
-        Debug.Assert(dotIndex != -1);
-
-        return filePath[.. (lastPartStart + dotIndex)];
-    }
-
-    var filePathWithoutExtension = FilePathWithoutExtension();
-    if (Directory.Exists(filePathWithoutExtension))
-    {
-        return;
-    }
-
     try
     {
-        ArchiveUtils.ExtractArchive(new()
+        var result = ArchiveUtils.ExtractToDirectoryWithSameName(new()
         {
             Context = context,
-            Type = archiveType,
-            InputFilePath = filePath,
-            OutputDirectoryPath = filePathWithoutExtension,
+            FilePath = filePath,
         });
-        File.Delete(filePath);
+        if (result == ExtractStatus.Success)
+        {
+            File.Delete(filePath);
+        }
     }
     catch (Exception e)
     {
