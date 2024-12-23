@@ -86,3 +86,9 @@ public sealed class DeleteCommand
 {
     public required string DeleteFilePath { get; set; }
 }
+
+public sealed class StatusResponse
+{
+    public bool Found7Z { get; set; }
+    public bool FoundWinRar { get; set; }
+}

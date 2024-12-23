@@ -9,7 +9,10 @@ function rerun()
         // let row = document.createElement("div");
         // row.textContent = message;
         // div.append(row);
-        console.log(message);
+        if (typeof(message) == "string")
+        {
+            console.log(message);
+        }
     })
 
     chrome.downloads.onChanged.addListener(download =>

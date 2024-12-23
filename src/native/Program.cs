@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics;
-using System.IO.Compression;
 using System.Text;
 
 using var stdin = Console.OpenStandardInput();
 using var logFile = File.OpenWrite(@"C:\Users\Anton\Desktop\ext\log.txt");
 using var logger = new StreamWriter(logFile, Encoding.UTF8, leaveOpen: true);
 using var stdout = Console.OpenStandardOutput();
+var context = ArchiveExecutablesContext.Create();
 while (!AppDomain.CurrentDomain.IsFinalizingForUnload())
 {
     Loop();
@@ -15,21 +15,65 @@ void Loop()
 {
     var message = ReadHelper.Read(stdin);
 
-    // To support other formats:
-    // https://github.com/icsharpcode/SharpZipLib/wiki/GZip-and-Tar-Samples
-    if (!message.FilePath.EndsWith(".zip"))
+    // TODO: Implement options?
+    if (message.RefreshTools)
+    {
+        context.Refresh();
+        WriteHelper.WriteObject(stdout, new StatusResponse
+        {
+            Found7Z = context._7ZPath != null,
+            FoundWinRar = context.RarPath != null,
+        });
+        return;
+    }
+
+    if (message.FilePath is not { } filePath)
+    {
+        return;
+    }
+
+    ArchiveType? GetArchiveType()
+    {
+        if (filePath.EndsWith(".zip"))
+        {
+            return ArchiveType.Zip;
+        }
+        if (filePath.EndsWith(".rar"))
+        {
+            return ArchiveType.Rar;
+        }
+        if (filePath.EndsWith(".7z"))
+        {
+            return ArchiveType._7z;
+        }
+        if (filePath.EndsWith(".tar.gz"))
+        {
+            return ArchiveType.TarGz;
+        }
+        if (filePath.EndsWith(".tar"))
+        {
+            return ArchiveType.Tar;
+        }
+        return null;
+    }
+
+    if (GetArchiveType() is not { } archiveType)
     {
         return;
     }
 
     string FilePathWithoutExtension()
     {
-        var dotIndex = message.FilePath.AsSpan().LastIndexOf(".");
+        var filePathSpan = filePath.AsSpan();
+        var lastDirSeparatorPath = filePathSpan.LastIndexOfAny(['\\', '/']);
+        int lastPartStart = lastDirSeparatorPath + 1;
+        var lastPart = filePathSpan[lastPartStart ..];
+        var dotIndex = lastPart.IndexOf(".");
 
         // Checked the extension previously.
         Debug.Assert(dotIndex != -1);
 
-        return message.FilePath[.. dotIndex];
+        return filePath[.. (lastPartStart + dotIndex)];
     }
 
     var filePathWithoutExtension = FilePathWithoutExtension();
@@ -40,11 +84,14 @@ void Loop()
 
     try
     {
+        ArchiveUtils.ExtractArchive(new()
         {
-            using var fileStream = File.OpenRead(message.FilePath);
-            ZipFile.ExtractToDirectory(message.FilePath, filePathWithoutExtension);
-        }
-        File.Delete(message.FilePath);
+            Context = context,
+            Type = archiveType,
+            InputFilePath = filePath,
+            OutputDirectoryPath = filePathWithoutExtension,
+        });
+        File.Delete(filePath);
     }
     catch (Exception e)
     {

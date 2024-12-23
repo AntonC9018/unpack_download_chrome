@@ -3,7 +3,8 @@ using System.Text.Json;
 
 public sealed class Message
 {
-    public required string FilePath { get; set; }
+    public string? FilePath { get; set; }
+    public bool RefreshTools { get; set; }
 }
 
 public static class SerializationHelper
