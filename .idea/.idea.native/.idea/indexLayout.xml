@@ -2,7 +2,9 @@
 <project version="4">
   <component name="UserContentModel">
     <attachedFolders>
-      <Path>extension</Path>
+      <Path>src/common</Path>
+      <Path>src/extension</Path>
+      <Path>src/helper</Path>
     </attachedFolders>
     <explicitIncludes />
     <explicitExcludes />

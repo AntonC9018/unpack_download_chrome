@@ -1,0 +1,6 @@
+<Project>
+    <Import Project="$(MSBuildThisFileDirectory)..\common\Include.targets" />
+    <ItemGroup>
+        <Compile Include="$(MSBuildThisFileDirectory)*.cs" />
+    </ItemGroup>
+</Project>

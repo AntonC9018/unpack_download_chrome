@@ -1,7 +1,7 @@
 {
   "name": "unpack_zip",
   "description": "My Application",
-  "path": "C:\\Users\\Anton\\Desktop\\ext\\native\\bin\\Debug\\net9.0-windows\\native.exe",
+  "path": "bin/native.exe",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://lbiomffinpioedhmgeekagnbagfjeipj/"]
 }
