@@ -3,5 +3,5 @@
   "description": "My Application",
   "path": "bin/native.exe",
   "type": "stdio",
-  "allowed_origins": ["chrome-extension://lbiomffinpioedhmgeekagnbagfjeipj/"]
+  "allowed_origins": ["chrome-extension://jhdefkpkecgnedcgppffgigckcdeiogl/"]
 }

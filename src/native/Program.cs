@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 
 using var stdin = Console.OpenStandardInput();
 using var logFile = CreateOrOpenLogFile();
@@ -53,11 +52,7 @@ void Loop()
 
 void OpenDirectoryInExplorer(string directory)
 {
-    var processInfo = new ProcessStartInfo(
-        fileName: "explorer.exe",
-        arguments: [directory]);
-    processInfo.RedirectStandardOutput = true;
-    Process.Start(processInfo);
+    ExplorerHelper.OpenFolderAndSelectFile(directory);
 }
 
 Stream CreateOrOpenLogFile()
