@@ -2,7 +2,7 @@
 using System.Text;
 
 using var stdin = Console.OpenStandardInput();
-using var logFile = File.OpenWrite(@"C:\Users\Anton\Desktop\ext\log.txt");
+using var logFile = CreateOrOpenLogFile();
 using var logger = new StreamWriter(logFile, Encoding.UTF8, leaveOpen: true);
 using var stdout = Console.OpenStandardOutput();
 var context = ArchiveExecutablesContext.Create();
@@ -58,4 +58,14 @@ void OpenDirectoryInExplorer(string directory)
         arguments: [directory]);
     processInfo.RedirectStandardOutput = true;
     Process.Start(processInfo);
+}
+
+Stream CreateOrOpenLogFile()
+{
+    var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    var myAppDir = Path.Combine(appData, "unpack_zip");
+    Directory.CreateDirectory(myAppDir);
+    var logFilePath = Path.Combine(myAppDir, "log.txt");
+    var ret = File.OpenWrite(logFilePath);
+    return ret;
 }
