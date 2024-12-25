@@ -23,6 +23,12 @@ public sealed class ArchiveExecutablesContext
     }
 }
 
+public struct ExtractToDirectoryWithSameNameResult
+{
+    public required ExtractStatus Status;
+    public required string? OutputDirectory;
+}
+
 public enum ExtractStatus
 {
     Failure,
@@ -38,27 +44,36 @@ public static class ArchiveUtils
         public required string FilePath;
         public required ArchiveExecutablesContext Context;
     }
-    public static ExtractStatus ExtractToDirectoryWithSameName(ExtractToDirectoryWithSameNameParams p)
+
+    public static ExtractToDirectoryWithSameNameResult ExtractToDirectoryWithSameName(ExtractToDirectoryWithSameNameParams p)
     {
         ArchiveType? GetArchiveType()
         {
-            if (p.FilePath.EndsWith(".zip"))
+            bool Ends(string end)
+            {
+                if (p.FilePath.EndsWith(end, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+                return false;
+            }
+            if (Ends(".zip"))
             {
                 return ArchiveType.Zip;
             }
-            if (p.FilePath.EndsWith(".rar"))
+            if (Ends(".rar"))
             {
                 return ArchiveType.Rar;
             }
-            if (p.FilePath.EndsWith(".7z"))
+            if (Ends(".7z"))
             {
                 return ArchiveType._7z;
             }
-            if (p.FilePath.EndsWith(".tar.gz"))
+            if (Ends(".tar.gz"))
             {
                 return ArchiveType.TarGz;
             }
-            if (p.FilePath.EndsWith(".tar"))
+            if (Ends(".tar"))
             {
                 return ArchiveType.Tar;
             }
@@ -67,7 +82,11 @@ public static class ArchiveUtils
 
         if (GetArchiveType() is not { } archiveType)
         {
-            return ExtractStatus.NotArchive;
+            return new()
+            {
+                Status = ExtractStatus.NotArchive,
+                OutputDirectory = null,
+            };
         }
 
         string FilePathWithoutExtension()
@@ -84,10 +103,14 @@ public static class ArchiveUtils
             return p.FilePath[.. (lastPartStart + dotIndex)];
         }
 
-        var filePathWithoutExtension = FilePathWithoutExtension();
-        if (Directory.Exists(filePathWithoutExtension))
+        var outputDirectory = FilePathWithoutExtension();
+        if (Directory.Exists(outputDirectory))
         {
-            return ExtractStatus.DirectoryExists;
+            return new()
+            {
+                Status = ExtractStatus.DirectoryExists,
+                OutputDirectory = outputDirectory,
+            };
         }
 
         bool success = ExtractArchive(new()
@@ -95,13 +118,22 @@ public static class ArchiveUtils
             Context = p.Context,
             Type = archiveType,
             InputFilePath = p.FilePath,
-            OutputDirectoryPath = filePathWithoutExtension,
+            OutputDirectoryPath = outputDirectory,
         });
-        if (success)
+
+        ExtractStatus Status()
         {
-            return ExtractStatus.Success;
+            if (success)
+            {
+                return ExtractStatus.Success;
+            }
+            return ExtractStatus.Failure;
         }
-        return ExtractStatus.Failure;
+        return new()
+        {
+            Status = Status(),
+            OutputDirectory = outputDirectory,
+        };
     }
 
     public struct ExtractParams

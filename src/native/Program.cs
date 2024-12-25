@@ -39,13 +39,23 @@ void Loop()
             Context = context,
             FilePath = filePath,
         });
-        if (result == ExtractStatus.Success)
+        if (result.Status == ExtractStatus.Success)
         {
             File.Delete(filePath);
+            OpenDirectoryInExplorer(result.OutputDirectory!);
         }
     }
     catch (Exception e)
     {
         logger.WriteLine(e.Message);
     }
+}
+
+void OpenDirectoryInExplorer(string directory)
+{
+    var processInfo = new ProcessStartInfo(
+        fileName: "explorer.exe",
+        arguments: [directory]);
+    processInfo.RedirectStandardOutput = true;
+    Process.Start(processInfo);
 }
