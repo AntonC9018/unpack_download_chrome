@@ -2,29 +2,34 @@ using System.Text;
 
 public class IntegrationTests
 {
-    [_7zFact]
-    public void _7zFullTest()
+    public static IEnumerable<object[]> ArchiveDefinitions => TestData.ArchiveDefinitionsAsParams;
+
+    [_7zTheory]
+    [MemberData(nameof(ArchiveDefinitions))]
+    public void _7zFullTest(ArchiveDefinition def)
     {
-        DoFullTest(ArchiveType._7z);
+        DoFullTest(ArchiveType._7z, def);
     }
 
-    [RarFact]
-    public void RarFullTest()
+    [RarTheory]
+    [MemberData(nameof(ArchiveDefinitions))]
+    public void RarFullTest(ArchiveDefinition def)
     {
-        DoFullTest(ArchiveType.Rar);
+        DoFullTest(ArchiveType.Rar, def);
     }
 
-    [Fact]
-    public void ZipFullTest()
+    [Theory]
+    [MemberData(nameof(ArchiveDefinitions))]
+    public void ZipFullTest(ArchiveDefinition def)
     {
-        DoFullTest(ArchiveType.Zip);
+        DoFullTest(ArchiveType.Zip, def);
     }
 
-    private void DoFullTest(ArchiveType type)
+    private void DoFullTest(ArchiveType type, ArchiveDefinition def)
     {
         using var tempDir = TempDirectory.Create();
 
-        var testArchive = TestData.GetTestArchiveInfo(type);
+        var testArchive = TestData.GetTestArchiveInfo(type, def);
         var archiveInTempDir = Path.Join(tempDir.FullPath, testArchive.Name);
         File.Copy(testArchive.RelativePath, archiveInTempDir);
 
@@ -41,7 +46,7 @@ public class IntegrationTests
         // TODO: The output is disposed here, yikes.
 
         var outputDirectory = Path.Join(tempDir.FullPath, testArchive.NameWithoutExtension);
-        TestData.VerifyUnpackedContents(outputDirectory);
+        def.VerifyUnpackedContents(outputDirectory);
 
         Assert.False(File.Exists(archiveInTempDir), "Initial file deleted properly");
     }

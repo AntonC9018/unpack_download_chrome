@@ -1,6 +1,6 @@
-public sealed class _7zFactAttribute : FactAttribute
+public sealed class _7zTheoryAttribute : TheoryAttribute
 {
-    public _7zFactAttribute()
+    public _7zTheoryAttribute()
     {
         if (ArchiveUtils.Find7ZExecutable() is null)
         {
@@ -9,9 +9,9 @@ public sealed class _7zFactAttribute : FactAttribute
     }
 }
 
-public sealed class RarFactAttribute : FactAttribute
+public sealed class RarTheoryAttribute : TheoryAttribute
 {
-    public RarFactAttribute()
+    public RarTheoryAttribute()
     {
         if (ArchiveUtils.FindRarExecutable() is null)
         {

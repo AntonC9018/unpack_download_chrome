@@ -4,7 +4,7 @@ public sealed class ArchiveTests
     {
         public required Func<string> FindExecutable;
         public required Func<ArchiveUtils.ExtractWithExecutableParams, bool> Extract;
-        public required string DataFileName;
+        public required TestArchiveInfo ArchiveInfo;
     }
 
     private void Test(TestParams p)
@@ -12,7 +12,7 @@ public sealed class ArchiveTests
         var path = p.FindExecutable();
         using var tempDir = TempDirectory.Create();
 
-        var fullPathToData = Path.GetFullPath(p.DataFileName);
+        var fullPathToData = Path.GetFullPath(p.ArchiveInfo.RelativePath);
         bool success = p.Extract(new()
         {
             ExecutablePath = path,
@@ -21,28 +21,32 @@ public sealed class ArchiveTests
         });
         Assert.True(success);
 
-        TestData.VerifyUnpackedContents(tempDir.FullPath);
+        p.ArchiveInfo.Verify(tempDir.FullPath);
     }
 
-    [_7zFact]
-    public void _7z()
+    public static IEnumerable<object[]> ArchiveDefinitions => TestData.ArchiveDefinitionsAsParams;
+
+    [_7zTheory]
+    [MemberData(nameof(ArchiveDefinitions))]
+    public void _7z(ArchiveDefinition def)
     {
         Test(new()
         {
             FindExecutable = ArchiveUtils.Find7ZExecutable!,
             Extract = ArchiveUtils.Extract7Z,
-            DataFileName = TestData.GetTestArchivePath(ArchiveType._7z),
+            ArchiveInfo = TestData.GetTestArchiveInfo(ArchiveType._7z, def),
         });
     }
 
-    [RarFact]
-    public void Rar()
+    [RarTheory]
+    [MemberData(nameof(ArchiveDefinitions))]
+    public void Rar(ArchiveDefinition def)
     {
         Test(new()
         {
             FindExecutable = ArchiveUtils.FindRarExecutable!,
             Extract = ArchiveUtils.ExtractRar,
-            DataFileName = TestData.GetTestArchivePath(ArchiveType.Rar),
+            ArchiveInfo = TestData.GetTestArchiveInfo(ArchiveType.Rar, def),
         });
     }
 }
