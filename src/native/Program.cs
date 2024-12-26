@@ -58,7 +58,7 @@ void OpenDirectoryInExplorer(string directory)
 Stream CreateOrOpenLogFile()
 {
     var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-    var myAppDir = Path.Combine(appData, "unpack_zip");
+    var myAppDir = Path.Combine(appData, AppConstants.AppName);
     Directory.CreateDirectory(myAppDir);
     var logFilePath = Path.Combine(myAppDir, "log.txt");
     var ret = File.OpenWrite(logFilePath);
