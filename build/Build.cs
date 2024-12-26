@@ -49,6 +49,8 @@ class Build : NukeBuild
             x = x.SetConfiguration(Configuration);
             x = x.SetOutput(output);
             x = x.SetNoRestore(true);
+            x = x.SetSelfContained(true);
+            x = x.AddProcessAdditionalArguments("-r", "win-x64");
             return x;
         });
         return output;
