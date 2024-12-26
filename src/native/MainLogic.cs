@@ -6,36 +6,59 @@ public sealed class Application : IDisposable
     private readonly Stream _out;
     private readonly StreamWriter _log;
     private readonly ArchiveExecutablesContext _context;
+    private readonly Action<string> _actionAfterUnpack;
 
     public Application(
         Stream @in,
         Stream @out,
         StreamWriter log,
-        ArchiveExecutablesContext context)
+        ArchiveExecutablesContext context,
+        Action<string>? actionAfterUnpack)
     {
         _in = @in;
         _out = @out;
         _context = context;
         _log = log;
+        _actionAfterUnpack = actionAfterUnpack ?? (_ => {});
     }
 
     public void Dispose()
     {
         _in.Dispose();
         _out.Dispose();
+        _log.Dispose();
     }
 
     public static Application CreateDefault()
     {
-        using var logger = CreateOrOpenDefaultLogFile();
-        using var stdin = Console.OpenStandardInput();
-        using var stdout = Console.OpenStandardOutput();
+        StreamWriter? logger = null;
+        Stream? stdin = null;
+        Stream? stdout = null;
+        try
+        {
+            logger = CreateOrOpenDefaultLogFile();
+            stdin = Console.OpenStandardInput();
+            stdout = Console.OpenStandardOutput();
+        }
+        catch (Exception)
+        {
+            logger?.Dispose();
+            stdin?.Dispose();
+            stdout?.Dispose();
+            throw;
+        }
         var context = ArchiveExecutablesContext.Create();
         return new Application(
             @in: stdin,
             @out: stdout,
             log: logger,
-            context: context);
+            context: context,
+            actionAfterUnpack: OpenDirectoryInExplorer);
+
+        static void OpenDirectoryInExplorer(string directory)
+        {
+            ExplorerHelper.OpenFolderAndSelectFile(directory);
+        }
     }
 
     public bool MainLoop()
@@ -94,17 +117,12 @@ public sealed class Application : IDisposable
             if (result.Status == ExtractStatus.Success)
             {
                 File.Delete(filePath);
-                OpenDirectoryInExplorer(result.OutputDirectory!);
+                _actionAfterUnpack(result.OutputDirectory!);
             }
         }
         catch (Exception e)
         {
             _log.WriteLine(e.Message);
-        }
-
-        void OpenDirectoryInExplorer(string directory)
-        {
-            ExplorerHelper.OpenFolderAndSelectFile(directory);
         }
     }
 

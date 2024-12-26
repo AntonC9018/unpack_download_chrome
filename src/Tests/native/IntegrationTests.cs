@@ -77,7 +77,8 @@ public sealed class TestContext : IDisposable
             @in: input,
             @out: output,
             log: log1,
-            context: ArchiveExecutablesContext.Create());
+            context: ArchiveExecutablesContext.Create(),
+            actionAfterUnpack: null);
         Thread? thread = null;
         try
         {

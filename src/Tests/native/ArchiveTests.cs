@@ -42,7 +42,7 @@ public sealed class ArchiveTests
         {
             FindExecutable = ArchiveUtils.FindRarExecutable!,
             Extract = ArchiveUtils.ExtractRar,
-            DataFileName = TestData.GetTestArchiveName(ArchiveType.Rar),
+            DataFileName = TestData.GetTestArchivePath(ArchiveType.Rar),
         });
     }
 }
