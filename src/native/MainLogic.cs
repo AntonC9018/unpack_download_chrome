@@ -85,10 +85,6 @@ public sealed class Application : IDisposable
     public void ReadAndProcessMessage()
     {
         var message = ReadHelper.Read(_in);
-        if (message is null)
-        {
-            return;
-        }
 
         // TODO: Implement options?
         if (message.RefreshTools)

@@ -19,24 +19,22 @@ public static class SerializationHelper
 
 public static class ReadHelper
 {
-    public static Message? Read(Stream input)
+    public static Message Read(Stream input)
     {
         Span<byte> lenBytes = stackalloc byte[SerializationHelper.LengthSize];
         input.ReadExactly(lenBytes);
         var len = BitConverter.ToInt32(lenBytes);
+
+        Debug.Assert(len != 0);
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if (len == 0)
         {
-            return null;
+            throw new InvalidOperationException("Invalid input stream.");
         }
 
-        using var reader = new StreamReader(
-            encoding: Encoding.UTF8,
-            leaveOpen: true,
-            detectEncodingFromByteOrderMarks: false,
-            stream: input);
-        var bufferArr = new char[len];
+        var bufferArr = new byte[len];
         var bufferSpan = bufferArr.AsSpan();
-        bool success = ReadChars(reader, bufferSpan);
+        bool success = ReadChars(input, bufferSpan);
         if (!success)
         {
             throw new InvalidOperationException("Invalid input stream.");
@@ -50,7 +48,7 @@ public static class ReadHelper
         return message;
     }
 
-    public static bool ReadChars(StreamReader input, Span<char> bufferSpan)
+    public static bool ReadChars(Stream input, Span<byte> bufferSpan)
     {
         int pos = 0;
 
