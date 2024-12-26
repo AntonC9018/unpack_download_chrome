@@ -90,7 +90,7 @@ public sealed class Program
                 {
                     return filesInDir;
                 }
-                return new[] { new Dir(x.Key, filesInDir.ToArray()) };
+                return [new Dir(x.Key, filesInDir.ToArray())];
             })
             .SelectMany(x => x)
             .ToArray();
