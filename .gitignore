@@ -4,3 +4,4 @@ node_modules
 log.txt
 temp
 artifacts
+*.user*
