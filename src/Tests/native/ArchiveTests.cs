@@ -10,26 +10,18 @@ public sealed class ArchiveTests
     private void Test(TestParams p)
     {
         var path = p.FindExecutable();
-        var tempDir = Directory.CreateTempSubdirectory().FullName;
+        using var tempDir = TempDirectory.Create();
 
-        try
+        var fullPathToData = Path.GetFullPath(p.DataFileName);
+        bool success = p.Extract(new()
         {
-            var fullPathToData = Path.GetFullPath(p.DataFileName);
-            bool success = p.Extract(new()
-            {
-                ExecutablePath = path,
-                InputFilePath = fullPathToData,
-                OutputDirectoryPath = tempDir,
-            });
-            Assert.True(success);
+            ExecutablePath = path,
+            InputFilePath = fullPathToData,
+            OutputDirectoryPath = tempDir.FullPath,
+        });
+        Assert.True(success);
 
-            var filePath = Path.Combine(tempDir, "ghoul.jpeg");
-            Assert.True(File.Exists(filePath));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        TestData.VerifyUnpackedContents(tempDir.FullPath);
     }
 
     [_7zFact]
@@ -39,7 +31,7 @@ public sealed class ArchiveTests
         {
             FindExecutable = ArchiveUtils.Find7ZExecutable!,
             Extract = ArchiveUtils.Extract7Z,
-            DataFileName = "data/ghoul.7z",
+            DataFileName = TestData.GetTestArchivePath(ArchiveType._7z),
         });
     }
 
@@ -50,7 +42,7 @@ public sealed class ArchiveTests
         {
             FindExecutable = ArchiveUtils.FindRarExecutable!,
             Extract = ArchiveUtils.ExtractRar,
-            DataFileName = "data/ghoul.rar",
+            DataFileName = TestData.GetTestArchiveName(ArchiveType.Rar),
         });
     }
 }
