@@ -131,7 +131,8 @@ public sealed class Application : IDisposable
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var myAppDir = Path.Combine(appData, AppConstants.AppName);
         Directory.CreateDirectory(myAppDir);
-        var logFilePath = Path.Combine(myAppDir, "log.txt");
+        var processId = Environment.ProcessId;
+        var logFilePath = Path.Combine(myAppDir, "log-" + processId + ".txt");
         var ret = File.OpenWrite(logFilePath);
         return new StreamWriter(ret, Encoding.UTF8, leaveOpen: false);
     }
