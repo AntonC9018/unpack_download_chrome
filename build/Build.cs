@@ -7,6 +7,9 @@ class Build : NukeBuild
 {
     public static int Main() => Execute<Build>(x => x.Build1);
 
+    [Parameter("Whether to package the .net runtime. For local tests do 'false' since that makes it compile faster.")]
+    readonly bool Standalone;
+
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
     readonly AbsolutePath SrcDirectory = RootDirectory / "src";
@@ -49,8 +52,11 @@ class Build : NukeBuild
             x = x.SetConfiguration(Configuration);
             x = x.SetOutput(output);
             x = x.SetNoRestore(true);
-            x = x.SetSelfContained(true);
-            x = x.AddProcessAdditionalArguments("-r", "win-x64");
+            if (Standalone)
+            {
+                x = x.SetSelfContained(true);
+                x = x.AddProcessAdditionalArguments("-r", "win-x64");
+            }
             return x;
         });
         return output;

@@ -108,6 +108,10 @@
             "Debug",
             "Release"
           ]
+        },
+        "Standalone": {
+          "type": "boolean",
+          "description": "Whether to package the .net runtime. For local tests do 'false' since that makes it compile faster"
         }
       }
     },
