@@ -144,12 +144,20 @@ public static class ArchiveUtils
         public required string OutputDirectoryPath;
     }
 
+    /// <summary>
+    /// The directory must not exist.
+    /// </summary>
     public static bool ExtractArchive(ExtractParams p)
     {
         Stream OpenInput()
         {
             var fileStream = File.OpenRead(p.InputFilePath);
             return fileStream;
+        }
+
+        void CreateDir()
+        {
+            Directory.CreateDirectory(p.OutputDirectoryPath);
         }
 
         try
@@ -168,6 +176,7 @@ public static class ArchiveUtils
                     {
                         return false;
                     }
+                    CreateDir();
                     bool ret = ExtractRar(new()
                     {
                         ExecutablePath = p.Context.RarPath,
@@ -182,6 +191,7 @@ public static class ArchiveUtils
                     {
                         return false;
                     }
+                    CreateDir();
                     bool ret = Extract7Z(new()
                     {
                         ExecutablePath = p.Context._7ZPath,
@@ -222,16 +232,8 @@ public static class ArchiveUtils
         public required string ExecutablePath;
     }
 
-    private static bool ExecuteWithArgs(
-        string program,
-        string outputPath,
-        string[] args)
+    private static bool ExecuteWithArgs(ProcessStartInfo startInfo)
     {
-        var startInfo = new ProcessStartInfo(
-            program,
-            arguments: args);
-        startInfo.WorkingDirectory = outputPath;
-
         // The output is going to be ignored
         startInfo.RedirectStandardOutput = true;
 
@@ -248,29 +250,34 @@ public static class ArchiveUtils
         return false;
     }
 
+    /// <summary>
+    /// The directory must exist.
+    /// </summary>
     public static bool ExtractRar(ExtractWithExecutableParams p)
     {
-        return ExecuteWithArgs(
-            program: p.ExecutablePath,
-            outputPath: p.OutputDirectoryPath,
-            [
-                "x",
-                p.InputFilePath,
-                // No output
-                "-inul",
-            ]);
+        string[] args = [
+            "x",
+            p.InputFilePath,
+            "-inul",
+        ];
+        var startInfo = new ProcessStartInfo(p.ExecutablePath, arguments: args);
+        startInfo.WorkingDirectory = p.OutputDirectoryPath;
+        return ExecuteWithArgs(startInfo);
     }
 
+    /// <summary>
+    /// The directory must exist.
+    /// </summary>
     public static bool Extract7Z(ExtractWithExecutableParams p)
     {
-        return ExecuteWithArgs(
-            program: p.ExecutablePath,
-            outputPath: p.OutputDirectoryPath,
-            [
-                "x",
-                p.InputFilePath,
-                // There's no flag for no output
-            ]);
+        string[] args = [
+            "x",
+            p.InputFilePath,
+            // There's no flag for no console output
+        ];
+        var startInfo = new ProcessStartInfo(p.ExecutablePath, arguments: args);
+        startInfo.WorkingDirectory = p.OutputDirectoryPath;
+        return ExecuteWithArgs(startInfo);
     }
 
     public struct FindExecutableParams
@@ -292,9 +299,9 @@ public static class ArchiveUtils
             }
         }
         {
-            if (FindExecutableInPath() is { } rar)
+            if (FindExecutableInPath() is { } exe)
             {
-                return rar;
+                return exe;
             }
         }
         return null;

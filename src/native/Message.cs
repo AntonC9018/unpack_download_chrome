@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
@@ -18,11 +19,15 @@ public static class SerializationHelper
 
 public static class ReadHelper
 {
-    public static Message Read(Stream input)
+    public static Message? Read(Stream input)
     {
         Span<byte> lenBytes = stackalloc byte[SerializationHelper.LengthSize];
         input.ReadExactly(lenBytes);
         var len = BitConverter.ToInt32(lenBytes);
+        if (len == 0)
+        {
+            return null;
+        }
 
         using var reader = new StreamReader(
             encoding: Encoding.UTF8,

@@ -1,18 +1,36 @@
 ﻿using System.Text;
 
-using var stdin = Console.OpenStandardInput();
 using var logFile = CreateOrOpenLogFile();
 using var logger = new StreamWriter(logFile, Encoding.UTF8, leaveOpen: true);
-using var stdout = Console.OpenStandardOutput();
-var context = ArchiveExecutablesContext.Create();
-while (!AppDomain.CurrentDomain.IsFinalizingForUnload())
+try
 {
-    Loop();
+    using var stdin = Console.OpenStandardInput();
+    using var stdout = Console.OpenStandardOutput();
+    var context = ArchiveExecutablesContext.Create();
+    while (!AppDomain.CurrentDomain.IsFinalizingForUnload())
+    {
+        Loop(stdin, stdout, context);
+    }
+}
+catch (Exception e)
+{
+    logger.WriteLine(e.Message);
+    if (e.StackTrace is { } s)
+    {
+        logger.WriteLine(s);
+    }
 }
 
-void Loop()
+void Loop(
+    Stream stdin,
+    Stream stdout,
+    ArchiveExecutablesContext context)
 {
     var message = ReadHelper.Read(stdin);
+    if (message is null)
+    {
+        return;
+    }
 
     // TODO: Implement options?
     if (message.RefreshTools)

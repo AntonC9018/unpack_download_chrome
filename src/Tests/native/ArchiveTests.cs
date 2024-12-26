@@ -10,7 +10,8 @@ public sealed class ArchiveTests
     private void Test(TestParams p)
     {
         var path = p.FindExecutable();
-        var tempDir = Directory.CreateTempSubdirectory();
+        var tempDir = Directory.CreateTempSubdirectory().FullName;
+
         try
         {
             var fullPathToData = Path.GetFullPath(p.DataFileName);
@@ -18,16 +19,16 @@ public sealed class ArchiveTests
             {
                 ExecutablePath = path,
                 InputFilePath = fullPathToData,
-                OutputDirectoryPath = tempDir.FullName,
+                OutputDirectoryPath = tempDir,
             });
             Assert.True(success);
 
-            var filePath = Path.Combine(tempDir.FullName, "ghoul.jpeg");
+            var filePath = Path.Combine(tempDir, "ghoul.jpeg");
             Assert.True(File.Exists(filePath));
         }
         finally
         {
-            Directory.Delete(tempDir.FullName, recursive: true);
+            Directory.Delete(tempDir, recursive: true);
         }
     }
 
@@ -52,6 +53,4 @@ public sealed class ArchiveTests
             DataFileName = "data/ghoul.rar",
         });
     }
-
-
 }
